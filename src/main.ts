@@ -13,6 +13,10 @@ async function bootstrap() {
 
   const isProd = process.env.NODE_ENV === "production";
 
+  // Render terminates HTTPS at its proxy and forwards the request to Node over
+  // HTTP. Trust that proxy so express-session can issue Secure cookies.
+  app.getHttpAdapter().getInstance().set("trust proxy", 1);
+
   app.use(cookieParser());
   app.use(
     session({
