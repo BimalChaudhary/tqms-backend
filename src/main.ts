@@ -11,18 +11,21 @@ import {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const isProd = process.env.NODE_ENV === "production";
+
   app.use(cookieParser());
   app.use(
     session({
       name: "tqms_sid",
-      secret: "tqms-dev-secret-change-in-prod",
+      secret: process.env.SESSION_SECRET || "tqms-dev-secret-change-in-prod",
       resave: false,
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        sameSite: "lax",
-        // secure: false is default — required for http://localhost
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        // Cross-site (Vercel → Render) needs none + secure
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
       },
     }),
   );
@@ -31,9 +34,11 @@ async function bootstrap() {
     origin: [
       "http://localhost:3000",
       "http://127.0.0.1:3000",
-      "https://tqms-frontend.vercel.app/",
+      "https://tqms-frontend.vercel.app", // NO trailing slash
     ],
     credentials: true,
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   });
 
   app.setGlobalPrefix("api");
