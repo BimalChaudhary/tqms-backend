@@ -1,0 +1,44 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AppModule = void 0;
+const common_1 = require("@nestjs/common");
+const auth_controller_1 = require("./auth/auth.controller");
+const dashboard_controller_1 = require("./dashboard/dashboard.controller");
+const lookup_controller_1 = require("./lookup/lookup.controller");
+const checkpoint_users_controller_1 = require("./checkpoint-users/checkpoint-users.controller");
+const narration_controller_1 = require("./narration/narration.controller");
+const queues_controller_1 = require("./queues/queues.controller");
+const vehicles_controller_1 = require("./vehicles/vehicles.controller");
+const vehicle_owners_controller_1 = require("./vehicle-owners/vehicle-owners.controller");
+const other_vehicles_controller_1 = require("./other-vehicles/other-vehicles.controller");
+const reports_controller_1 = require("./reports/reports.controller");
+const qr_controller_1 = require("./qr/qr.controller");
+let AppModule = class AppModule {
+};
+exports.AppModule = AppModule;
+exports.AppModule = AppModule = __decorate([
+    (0, common_1.Module)({
+        imports: [],
+        controllers: [
+            auth_controller_1.AuthController,
+            dashboard_controller_1.DashboardController,
+            lookup_controller_1.LookupController,
+            checkpoint_users_controller_1.CheckpointUsersController,
+            narration_controller_1.NarrationController,
+            queues_controller_1.QueuesController,
+            vehicles_controller_1.VehiclesController,
+            vehicle_owners_controller_1.VehicleOwnersController,
+            other_vehicles_controller_1.OtherVehiclesController,
+            reports_controller_1.ReportsController,
+            qr_controller_1.QrController,
+        ],
+        providers: [],
+    })
+], AppModule);
+//# sourceMappingURL=app.module.js.map
