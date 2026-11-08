@@ -52,7 +52,9 @@ export class ReportsController {
       q.entries.map((e: any) => ({
         id: e.id,
         dateTime: e.entryDate ?? q.entryDate,
-        receiptNo: e.billNo ?? e.id,
+        // Match the receipt endpoint; the entry UUID is an internal identifier,
+        // not a receipt number intended for staff.
+        receiptNo: e.billNo ?? `RCPT-${q.queueNumber}`,
         vehicleNo: q.vehicleNumber,
         vehicleType: q.vehicleType,
         checkpoint: q.lastCheckpoint ?? '—',
