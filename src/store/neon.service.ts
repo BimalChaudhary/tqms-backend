@@ -55,6 +55,11 @@ export class NeonStore implements OnApplicationShutdown {
         (db as any)[row.collection] = row.value;
       }
     }
+    const displayName = process.env.CHECKPOINT_DISPLAY_NAME?.trim() || 'lodbod checkpoint';
+    if (db.users[0] && db.users[0].name !== displayName) {
+      db.users[0].name = displayName;
+      await this.persist();
+    }
     console.log('Connected to Neon and loaded persisted application data.');
   }
 

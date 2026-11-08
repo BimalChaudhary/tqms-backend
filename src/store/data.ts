@@ -363,7 +363,7 @@ export const db = {
   users: [
     {
       id: "u1",
-      name: "Bimal Chaudahry",
+      name: "lodbod checkpoint",
       sthaniyaSangh: "Kathmandu Truck Sangh",
       email: "checkpoint@tqms.local",
       passwordHash,
