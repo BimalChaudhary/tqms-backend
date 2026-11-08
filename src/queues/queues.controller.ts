@@ -107,6 +107,7 @@ export class QueuesController {
       route: `${body.from} → ${body.to}`,
       transportCompany: null,
       driverPhone: pending.driverPhone,
+      cutFee: 50,
       loadDetails: body.material,
       checkpointWeight: body.grossWeight,
       entryDate: new Date().toISOString(),
@@ -182,6 +183,7 @@ export class QueuesController {
       route: `${body.from} → ${body.to}`,
       transportCompany: body.transportCompany ?? null,
       driverPhone: body.driverPhone ?? null,
+      cutFee: [0, 50, 100].includes(Number(body.cutFee)) ? Number(body.cutFee) : 50,
       loadDetails: body.loadDetails,
       checkpointWeight: body.grossWeight,
       entryDate: new Date().toISOString(),
@@ -237,11 +239,8 @@ export class QueuesController {
       driverPhone: q.driverPhone ?? null,
       narration: db.narration,
       weight: q.checkpointWeight,
-      charges: [
-        { label: 'Weighbridge fee', amount: 50 },
-        { label: 'Entry fee', amount: 100 },
-      ],
-      total: 150,
+      charges: [{ label: 'काटा शुल्क', amount: q.cutFee ?? 50 }],
+      total: q.cutFee ?? 50,
     };
   }
 }

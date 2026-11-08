@@ -99,6 +99,7 @@ export interface Queue {
   route: string | null;
   transportCompany: string | null;
   driverPhone?: string | null;
+  cutFee?: number;
   loadDetails: string | null;
   checkpointWeight: number | null;
   entryDate: string;
