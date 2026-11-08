@@ -28,7 +28,13 @@ export class CloudinaryStore {
       const stream = cloudinary.uploader.upload_stream(
         { folder, resource_type: 'auto', use_filename: true, unique_filename: true },
         (error, response) => {
-          if (error) reject(error);
+          if (error) {
+            const message = error.message || 'Cloudinary rejected the upload';
+            console.error('[Cloudinary upload failed]', message);
+            // Cloudinary may return a plain error object. Normalize it so the
+            // API filter can return a useful message instead of a blank 500.
+            reject(new Error(message));
+          }
           else if (response) resolve(response);
           else reject(new Error('Cloudinary returned no upload result'));
         },

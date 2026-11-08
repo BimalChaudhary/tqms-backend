@@ -82,6 +82,10 @@ export class NeonStore implements OnApplicationShutdown {
         await client.query('COMMIT');
       } catch (error) {
         await client.query('ROLLBACK');
+        console.error(
+          '[Neon persistence failed]',
+          error instanceof Error ? error.message : String(error),
+        );
         throw error;
       } finally {
         client.release();
