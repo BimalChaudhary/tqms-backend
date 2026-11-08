@@ -98,6 +98,7 @@ export interface Queue {
   sangh: string | null;
   route: string | null;
   transportCompany: string | null;
+  driverPhone?: string | null;
   loadDetails: string | null;
   checkpointWeight: number | null;
   entryDate: string;

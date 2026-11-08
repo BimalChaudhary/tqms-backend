@@ -106,6 +106,7 @@ export class QueuesController {
       sangh,
       route: `${body.from} → ${body.to}`,
       transportCompany: null,
+      driverPhone: pending.driverPhone,
       loadDetails: body.material,
       checkpointWeight: body.grossWeight,
       entryDate: new Date().toISOString(),
@@ -180,6 +181,7 @@ export class QueuesController {
       sangh,
       route: `${body.from} → ${body.to}`,
       transportCompany: body.transportCompany ?? null,
+      driverPhone: body.driverPhone ?? null,
       loadDetails: body.loadDetails,
       checkpointWeight: body.grossWeight,
       entryDate: new Date().toISOString(),
@@ -232,6 +234,7 @@ export class QueuesController {
       checkpoint: 'Current Checkpoint',
       vehicleNumber: q.vehicleNumber,
       load: q.loadDetails,
+      driverPhone: q.driverPhone ?? null,
       narration: db.narration,
       weight: q.checkpointWeight,
       charges: [
