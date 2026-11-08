@@ -92,15 +92,15 @@ function ownerLocation(body: Record<string, unknown>) {
 type OwnerFiles = Record<string, { originalname: string; buffer: Buffer }[]>;
 
 async function uploadOwnerFiles(files: OwnerFiles | undefined, cloudinary: CloudinaryStore) {
-  const urls: Record<string, string> = {};
-  for (const [field, values] of Object.entries(files ?? {})) {
-    const file = values[0];
-    if (file) {
+  const uploaded = await Promise.all(
+    Object.entries(files ?? {}).map(async ([field, values]) => {
+      const file = values[0];
+      if (!file) return undefined;
       const asset = await cloudinary.upload(file.buffer, file.originalname, `tqms/vehicle-owners/${field}`);
-      urls[field] = asset.url;
-    }
-  }
-  return urls;
+      return [field, asset.url] as const;
+    }),
+  );
+  return Object.fromEntries(uploaded.filter((entry): entry is readonly [string, string] => !!entry));
 }
 
 @Controller('vehicle-owners')

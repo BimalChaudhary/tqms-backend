@@ -64,13 +64,17 @@ export class NeonStore implements OnApplicationShutdown {
   }
 
   /** Save writes before returning the successful API response. */
-  persist(): Promise<void> {
+  persist(collections?: (keyof typeof db)[]): Promise<void> {
     if (!this.pool) return Promise.resolve();
+    const selected = [...new Set(collections ?? this.collections())].filter(
+      (collection) => collection !== 'sessions' && collection in db,
+    );
+    if (!selected.length) return Promise.resolve();
     this.saveChain = this.saveChain.then(async () => {
       const client = await this.pool!.connect();
       try {
         await client.query('BEGIN');
-        for (const collection of this.collections()) {
+        for (const collection of selected) {
           await client.query(
             `INSERT INTO tqms_app_state (collection, value, updated_at)
              VALUES ($1, $2::jsonb, now())
