@@ -10,14 +10,21 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { mergeMap } from 'rxjs/operators';
+import { NeonStore } from '../store/neon.service';
 
 /** Wrap successful responses as { data: T } or leave paginated as-is */
 @Injectable()
 export class EnvelopeInterceptor implements NestInterceptor {
+  constructor(private readonly neonStore: NeonStore) {}
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
     return next.handle().pipe(
-      map((body) => {
+      // Persist successful mutations before the response is sent.
+      mergeMap(async (body) => {
+        if (isWrite) await this.neonStore.persist();
         if (body === undefined || body === null) return body;
         // Already has data/meta (paginated or single)
         if (typeof body === 'object' && ('data' in body || 'meta' in body)) return body;

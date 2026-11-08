@@ -17,6 +17,7 @@ import {
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '../common/auth.guard';
 import { db, LOOKUPS, newId, paginate } from '../store/data';
+import { CloudinaryStore } from '../store/cloudinary.service';
 
 const SUB_RESOURCES = ['documents', 'owners', 'beneficiaries', 'check-passes', 'route-permits', 'insurances', 'type-cards', 'bluebooks'];
 
@@ -109,9 +110,17 @@ const documentUploadOptions = {
 
 type DocumentUploads = { document?: { originalname: string; mimetype: string; buffer: Buffer }[] };
 
-function withDocument(values: Record<string, any>, uploads?: DocumentUploads) {
+async function withDocument(values: Record<string, any>, uploads: DocumentUploads | undefined, cloudinary: CloudinaryStore, resource: string) {
   const file = uploads?.document?.[0];
-  return file ? { ...values, documentName: file.originalname, documentUrl: `data:${file.mimetype};base64,${file.buffer.toString('base64')}` } : values;
+  if (!file) return values;
+  const asset = await cloudinary.upload(file.buffer, file.originalname, `tqms/vehicles/${resource}`);
+  return {
+    ...values,
+    documentName: file.originalname,
+    documentUrl: asset.url,
+    documentPublicId: asset.publicId,
+    documentResourceType: asset.resourceType,
+  };
 }
 
 function lookupCode(type: string, id: string) {
@@ -162,6 +171,8 @@ function syncInsuranceSummary(vehicle: (typeof db.vehicles)[number]) {
 @Controller('vehicles')
 @UseGuards(AuthGuard)
 export class VehiclesController {
+  constructor(private readonly cloudinary: CloudinaryStore) {}
+
   @Get()
   list(
     @Query('page') page = '1',
@@ -366,7 +377,7 @@ export class VehiclesController {
 
   @Post(':id/:resource')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'document', maxCount: 1 }], documentUploadOptions))
-  subCreate(
+  async subCreate(
     @Param('id') id: string,
     @Param('resource') resource: string,
     @Body() body: any,
@@ -376,7 +387,7 @@ export class VehiclesController {
     const v = db.vehicles.find((x) => x.id === id);
     if (!v) throw new NotFoundException('Vehicle not found');
     if (!v.sub[resource]) v.sub[resource] = [];
-    const values = withDocument(body, uploads);
+    const values = await withDocument(body, uploads, this.cloudinary, resource);
     validateSubRecord(resource, values);
     const row = decorateSubRecord(resource, { id: newId(), ...values });
     v.sub[resource].push(row);
@@ -387,7 +398,7 @@ export class VehiclesController {
 
   @Patch(':id/:resource/:rid')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'document', maxCount: 1 }], documentUploadOptions))
-  subUpdate(
+  async subUpdate(
     @Param('id') id: string,
     @Param('resource') resource: string,
     @Param('rid') rid: string,
@@ -400,7 +411,7 @@ export class VehiclesController {
     const list = v.sub[resource] ?? [];
     const idx = list.findIndex((r: any) => r.id === rid);
     if (idx < 0) throw new NotFoundException('Record not found');
-    const values = withDocument({ ...list[idx], ...body }, uploads);
+    const values = await withDocument({ ...list[idx], ...body }, uploads, this.cloudinary, resource);
     validateSubRecord(resource, values);
     list[idx] = decorateSubRecord(resource, { ...values, id: rid });
     if (resource === 'insurances') syncInsuranceSummary(v);

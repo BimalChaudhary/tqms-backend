@@ -1,6 +1,6 @@
 # TQMS Checkpoint Mock API
 
-NestJS API for local development of the TQMS checkpoint frontend. It uses seeded in-memory data; it does not connect to the production TQMS database. All in-memory changes reset when the backend restarts.
+NestJS API for the TQMS checkpoint frontend. Without `DATABASE_URL`, it uses seeded in-memory demo data. With `DATABASE_URL`, it loads and persists application collections in Neon PostgreSQL.
 
 For the complete two-app setup and architecture, see the [project README](../README.md).
 
@@ -10,6 +10,22 @@ For the complete two-app setup and architecture, see the [project README](../REA
 npm ci
 npm run start:dev
 ```
+
+To use Neon locally, copy `.env.example` to `.env` and set `DATABASE_URL` to the
+pooled connection string from Neon. Keep `.env` private; it is ignored by Git.
+On deployment, set `DATABASE_URL` in the backend host's environment settings.
+The app creates the `tqms_app_state` table automatically. It seeds each
+collection on first use and then loads existing collection data from Neon.
+Successful POST, PUT, PATCH and DELETE requests are saved before their response
+is returned. This currently stores each application collection as a JSONB
+document; it does not create normalized relational tables.
+
+For uploads, also set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+`CLOUDINARY_API_SECRET` in the backend environment (Render for deployment).
+Owner files, bank cheque files, and vehicle documents/permits are uploaded by
+the backend to Cloudinary; their secure delivery URLs are stored with the Neon
+records. These are standard Cloudinary delivery URLs, so use private/authenticated
+delivery for files that must not be publicly accessible.
 
 The API listens at `http://localhost:4000/api` by default. Set `PORT` to change the port. The frontend should use `NEXT_PUBLIC_API_BASE_URL=http://localhost:4000/api`.
 
@@ -46,5 +62,6 @@ See the [frontend API contract](../tqms-frontend/docs/API_CONTRACT.md) for reque
 ## Implementation notes
 
 - Global response handling wraps ordinary successful values in `{ data }`, returns paginated `{ data, meta }` responses, and formats exceptions as `{ message, errors? }`.
-- The session secret is a development placeholder in `src/main.ts`; replace it and configure secure cookies before any real deployment.
-- This backend is a development mock, not a production database or production-ready service.
+- `DATABASE_URL` is required when `NODE_ENV=production`; local development falls back to in-memory seed data when it is absent.
+- The session secret is a development placeholder in `src/main.ts`; replace it before deployment.
+- Database sessions are not persisted; configure a production session store before relying on long-lived sessions across restarts.

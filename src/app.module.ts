@@ -10,6 +10,8 @@ import { VehicleOwnersController } from './vehicle-owners/vehicle-owners.control
 import { OtherVehiclesController } from './other-vehicles/other-vehicles.controller';
 import { ReportsController } from './reports/reports.controller';
 import { QrController } from './qr/qr.controller';
+import { NeonStore } from './store/neon.service';
+import { CloudinaryStore } from './store/cloudinary.service';
 
 @Module({
   imports: [],
@@ -26,6 +28,6 @@ import { QrController } from './qr/qr.controller';
     ReportsController,
     QrController,
   ],
-  providers: [],
+  providers: [NeonStore, CloudinaryStore],
 })
 export class AppModule {}

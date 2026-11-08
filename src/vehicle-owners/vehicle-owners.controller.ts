@@ -17,6 +17,7 @@ import {
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '../common/auth.guard';
 import { db, getDistricts, LOOKUPS, newId, paginate } from '../store/data';
+import { CloudinaryStore } from '../store/cloudinary.service';
 
 const ownerUploadFields = [
   { name: 'logo', maxCount: 1 },
@@ -88,20 +89,25 @@ function ownerLocation(body: Record<string, unknown>) {
   };
 }
 
-type OwnerFiles = Record<string, { originalname: string }[]>;
+type OwnerFiles = Record<string, { originalname: string; buffer: Buffer }[]>;
 
-function fileNames(files?: OwnerFiles): Record<string, string> {
-  const names: Record<string, string> = {};
-  Object.entries(files ?? {}).forEach(([field, values]) => {
-    const name = values[0]?.originalname;
-    if (name) names[field] = name;
-  });
-  return names;
+async function uploadOwnerFiles(files: OwnerFiles | undefined, cloudinary: CloudinaryStore) {
+  const urls: Record<string, string> = {};
+  for (const [field, values] of Object.entries(files ?? {})) {
+    const file = values[0];
+    if (file) {
+      const asset = await cloudinary.upload(file.buffer, file.originalname, `tqms/vehicle-owners/${field}`);
+      urls[field] = asset.url;
+    }
+  }
+  return urls;
 }
 
 @Controller('vehicle-owners')
 @UseGuards(AuthGuard)
 export class VehicleOwnersController {
+  constructor(private readonly cloudinary: CloudinaryStore) {}
+
   @Get()
   list(
     @Query('page') page = '1',
@@ -156,9 +162,9 @@ export class VehicleOwnersController {
 
   @Post()
   @UseInterceptors(FileFieldsInterceptor(ownerUploadFields, uploadOptions))
-  create(@Body() body: any, @UploadedFiles() uploads?: OwnerFiles) {
+  async create(@Body() body: any, @UploadedFiles() uploads?: OwnerFiles) {
     validateOwner(body);
-    const files = fileNames(uploads);
+    const files = await uploadOwnerFiles(uploads, this.cloudinary);
     const form = {
       ...body,
       name: body.name.trim(),
@@ -196,12 +202,12 @@ export class VehicleOwnersController {
 
   @Patch(':id')
   @UseInterceptors(FileFieldsInterceptor(ownerUploadFields, uploadOptions))
-  update(@Param('id') id: string, @Body() body: any, @UploadedFiles() uploads?: OwnerFiles) {
+  async update(@Param('id') id: string, @Body() body: any, @UploadedFiles() uploads?: OwnerFiles) {
     const idx = db.vehicleOwners.findIndex((x) => x.id === id);
     if (idx < 0) throw new NotFoundException('Owner not found');
     const o = db.vehicleOwners[idx];
     validateOwner({ ...o.form, ...body });
-    Object.assign(o.files, fileNames(uploads));
+    Object.assign(o.files, await uploadOwnerFiles(uploads, this.cloudinary));
     Object.assign(o.form, body);
     if (body.isIndividual !== undefined) o.form.isIndividual = body.isIndividual === true || body.isIndividual === 'true';
     if (body.name) o.name = body.name.trim();
@@ -230,7 +236,7 @@ export class VehicleOwnersController {
 
   @Post(':id/banks')
   @UseInterceptors(FileInterceptor('chequePhoto', chequeUploadOptions))
-  addBank(@Param('id') id: string, @Body() body: any, @UploadedFile() chequePhoto?: { mimetype: string; buffer: Buffer }) {
+  async addBank(@Param('id') id: string, @Body() body: any, @UploadedFile() chequePhoto?: { originalname: string; buffer: Buffer }) {
     const o = db.vehicleOwners.find((x) => x.id === id);
     if (!o) throw new NotFoundException('Owner not found');
     const errors: Record<string, string> = {};
@@ -250,7 +256,9 @@ export class VehicleOwnersController {
       branch: body.branchName.trim(),
       accountHolder: body.accountHolder.trim(),
       accountNumber: body.accountNumber.trim(),
-      chequeUrl: chequePhoto ? `data:${chequePhoto.mimetype};base64,${chequePhoto.buffer.toString('base64')}` : null,
+      chequeUrl: chequePhoto
+        ? (await this.cloudinary.upload(chequePhoto.buffer, chequePhoto.originalname, 'tqms/vehicle-owners/cheques')).url
+        : null,
       isCurrent,
     };
     o.banks.push(bank);
@@ -259,7 +267,7 @@ export class VehicleOwnersController {
 
   @Patch(':id/banks/:bankId')
   @UseInterceptors(FileInterceptor('chequePhoto', chequeUploadOptions))
-  updateBank(@Param('id') id: string, @Param('bankId') bankId: string, @Body() body: any, @UploadedFile() chequePhoto?: { mimetype: string; buffer: Buffer }) {
+  async updateBank(@Param('id') id: string, @Param('bankId') bankId: string, @Body() body: any, @UploadedFile() chequePhoto?: { originalname: string; buffer: Buffer }) {
     const o = db.vehicleOwners.find((x) => x.id === id);
     if (!o) throw new NotFoundException('Owner not found');
     const bank = o.banks.find((item) => item.id === bankId);
@@ -277,7 +285,9 @@ export class VehicleOwnersController {
     bank.branch = body.branchName.trim();
     bank.accountHolder = body.accountHolder.trim();
     bank.accountNumber = body.accountNumber.trim();
-    if (chequePhoto) bank.chequeUrl = `data:${chequePhoto.mimetype};base64,${chequePhoto.buffer.toString('base64')}`;
+    if (chequePhoto) {
+      bank.chequeUrl = (await this.cloudinary.upload(chequePhoto.buffer, chequePhoto.originalname, 'tqms/vehicle-owners/cheques')).url;
+    }
     bank.isCurrent = isCurrent;
     return bank;
   }

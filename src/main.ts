@@ -1,5 +1,7 @@
+import 'dotenv/config';
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { NeonStore } from "./store/neon.service";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import { ValidationPipe } from "@nestjs/common";
@@ -10,6 +12,8 @@ import {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const neonStore = app.get(NeonStore);
+  await neonStore.initialize();
 
   const isProd = process.env.NODE_ENV === "production";
 
@@ -54,7 +58,7 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.useGlobalInterceptors(new EnvelopeInterceptor());
+  app.useGlobalInterceptors(new EnvelopeInterceptor(neonStore));
 
   const port = process.env.PORT || 4000;
   await app.listen(port);
