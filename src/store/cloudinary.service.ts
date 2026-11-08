@@ -1,6 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
-import { Readable } from 'node:stream';
 
 export interface CloudinaryAsset {
   url: string;
@@ -34,7 +33,9 @@ export class CloudinaryStore {
           else reject(new Error('Cloudinary returned no upload result'));
         },
       );
-      Readable.from(buffer).pipe(stream);
+      // A Buffer is iterable too, so Readable.from(buffer) emits individual
+      // numbers. End the upload stream with the Buffer as one binary chunk.
+      stream.end(buffer);
     });
 
     return {
