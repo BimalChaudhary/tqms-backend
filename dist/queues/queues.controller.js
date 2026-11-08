@@ -93,6 +93,8 @@ let QueuesController = class QueuesController {
             sangh,
             route: `${body.from} → ${body.to}`,
             transportCompany: null,
+            driverPhone: pending.driverPhone,
+            cutFee: 50,
             loadDetails: body.material,
             checkpointWeight: body.grossWeight,
             entryDate: new Date().toISOString(),
@@ -162,6 +164,8 @@ let QueuesController = class QueuesController {
             sangh,
             route: `${body.from} → ${body.to}`,
             transportCompany: body.transportCompany ?? null,
+            driverPhone: body.driverPhone ?? null,
+            cutFee: [0, 50, 100].includes(Number(body.cutFee)) ? Number(body.cutFee) : 50,
             loadDetails: body.loadDetails,
             checkpointWeight: body.grossWeight,
             entryDate: new Date().toISOString(),
@@ -212,13 +216,11 @@ let QueuesController = class QueuesController {
             checkpoint: 'Current Checkpoint',
             vehicleNumber: q.vehicleNumber,
             load: q.loadDetails,
+            driverPhone: q.driverPhone ?? null,
             narration: data_1.db.narration,
             weight: q.checkpointWeight,
-            charges: [
-                { label: 'Weighbridge fee', amount: 50 },
-                { label: 'Entry fee', amount: 100 },
-            ],
-            total: 150,
+            charges: [{ label: 'काटा शुल्क', amount: q.cutFee ?? 50 }],
+            total: q.cutFee ?? 50,
         };
     }
 };

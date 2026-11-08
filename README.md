@@ -44,7 +44,7 @@ npm run start:dev
 npm run start:prod
 ```
 
-The backend package has no automated test script configured at this time.
+For the API smoke suite, start an isolated in-memory backend with `DATABASE_URL` unset, then run `npm run test:smoke` in another terminal. The complete setup and browser checklist are in the [testing guide](../tqms-frontend/docs/TESTING_GUIDE.md). The suite creates disposable records; do not point it at production or a database with real records.
 
 ## API modules
 

@@ -38,6 +38,8 @@ export declare class QueuesController {
         sangh: string | null;
         route: string;
         transportCompany: null;
+        driverPhone: string | null;
+        cutFee: number;
         loadDetails: any;
         checkpointWeight: any;
         entryDate: string;
@@ -74,6 +76,8 @@ export declare class QueuesController {
         sangh: string | null;
         route: string;
         transportCompany: any;
+        driverPhone: any;
+        cutFee: number;
         loadDetails: any;
         checkpointWeight: any;
         entryDate: string;
@@ -105,6 +109,7 @@ export declare class QueuesController {
         checkpoint: string;
         vehicleNumber: string;
         load: string | null;
+        driverPhone: string | null;
         narration: string;
         weight: number | null;
         charges: {

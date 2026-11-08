@@ -19,6 +19,8 @@ const vehicle_owners_controller_1 = require("./vehicle-owners/vehicle-owners.con
 const other_vehicles_controller_1 = require("./other-vehicles/other-vehicles.controller");
 const reports_controller_1 = require("./reports/reports.controller");
 const qr_controller_1 = require("./qr/qr.controller");
+const neon_service_1 = require("./store/neon.service");
+const cloudinary_service_1 = require("./store/cloudinary.service");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -38,7 +40,7 @@ exports.AppModule = AppModule = __decorate([
             reports_controller_1.ReportsController,
             qr_controller_1.QrController,
         ],
-        providers: [],
+        providers: [neon_service_1.NeonStore, cloudinary_service_1.CloudinaryStore],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map
