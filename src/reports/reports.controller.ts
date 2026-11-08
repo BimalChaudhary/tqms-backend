@@ -13,24 +13,29 @@ export class ReportsController {
     @Query('page') page = '1',
     @Query('pageSize') pageSize = '1000',
   ) {
-    const data = db.queues.map((q, i) => ({
+    const checkpointUser = db.users[0]?.name ?? 'N/A';
+    let items = db.queues.map((q) => ({
       id: q.id,
-      sn: i + 1,
-      name: q.owner ?? q.vehicleNumber,
-      vehicleNumber: q.vehicleNumber,
+      sangh: q.sangh ?? db.users[0]?.sthaniyaSangh ?? 'N/A',
+      checkpoint: q.lastCheckpoint ?? 'Current Checkpoint',
+      user: checkpointUser,
       entryDate: q.entryDate,
-      status: q.status,
-      weight: q.checkpointWeight,
+      totalVehicles: 1,
+      totalAmount: typeof q.cutFee === 'number' ? q.cutFee : 50,
     }));
-    return {
-      data,
-      meta: {
-        page: +page,
-        pageSize: +pageSize,
-        total: data.length,
-        totalPages: 1,
-      },
-    };
+
+    if (name) {
+      const search = name.trim().toLowerCase();
+      items = items.filter((item) =>
+        item.checkpoint.toLowerCase().includes(search) ||
+        item.user.toLowerCase().includes(search) ||
+        item.sangh.toLowerCase().includes(search),
+      );
+    }
+    if (start) items = items.filter((item) => item.entryDate.slice(0, 10) >= start);
+    if (end) items = items.filter((item) => item.entryDate.slice(0, 10) <= end);
+
+    return paginate(items, Number(page) || 1, Number(pageSize) || 10);
   }
 
   @Get('detail-entries')
